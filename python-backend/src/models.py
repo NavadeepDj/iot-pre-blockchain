@@ -26,8 +26,16 @@ class AccessGrant(BaseModel):
     cid: str
     owner_address: str
     recipient_address: str
-    reencryption_key_path: Optional[str] = Field(
-        default=None, description="Path to stored re-encryption key material"
+    recipient_public_key: str = Field(
+        ..., description="Base64-encoded recipient's Umbral public key"
     )
+    reencryption_key_path: Optional[str] = Field(
+        default=None, description="Path to stored re-encryption key material (kfrags)"
+    )
+    reencrypted_cid: Optional[str] = Field(
+        default=None, description="IPFS CID of the re-encrypted blob (set by proxy)"
+    )
+    processed: bool = Field(default=False, description="Whether proxy has processed this grant")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     expires_at: Optional[datetime] = None
 
