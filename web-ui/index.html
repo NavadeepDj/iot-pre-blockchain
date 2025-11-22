@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT PRE Blockchain System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .step-description {
+            color: #718096;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .output {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #2d3748;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .output.success {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .output.error {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #991b1b;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.pending {
+            background: #fbbf24;
+        }
+
+        .status-indicator.success {
+            background: #10b981;
+        }
+
+        .status-indicator.error {
+            background: #ef4444;
+        }
+
+        .blockchain-status {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-left: 8px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #1e40af;
+        }
+
+        .copy-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            width: auto;
+        }
+
+        .copy-btn:hover {
+            background: #cbd5e0;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .workflow {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 IoT Proxy Re-Encryption System</h1>
+            <p class="subtitle">Blockchain-Powered Decentralized Data Sharing</p>
+        </header>
+
+        <div class="blockchain-status">
+            <h2 style="margin-bottom: 12px; color: #2d3748;">System Status</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-indicator pending" id="anvil-status"></span>
+                    <span class="status-label">Anvil Blockchain</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator pending" id="ipfs-status"></span>
+                    <span class="status-label">IPFS Daemon</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator pending" id="contract-status"></span>
+                    <span class="status-label">Smart Contract</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow">
+            <!-- Step 1: Sensor Data Production -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Produce Data</div>
+                </div>
+                <p class="step-description">Encrypt sensor data and register on blockchain</p>
+                
+                <div class="form-group">
+                    <label>Sensor Data (JSON)</label>
+                    <textarea id="sensor-data" placeholder='{"temperature": 25.5, "humidity": 60}'>{
+  "temperature": 100.0,
+  "humidity": 55.2,
+  "timestamp": "2025-11-17T00:00:00Z"
+}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Sensor ID</label>
+                    <input type="text" id="sensor-id" value="sensor-1" placeholder="sensor-1">
+                </div>
+                
+                <button onclick="produceSensorData()">🚀 Encrypt & Register</button>
+                
+                <div id="produce-output" class="output" style="display: none;"></div>
+            </div>
+
+            <!-- Step 2: Grant Access -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Grant Access</div>
+                </div>
+                <p class="step-description">Authorize recipient to access encrypted data</p>
+                
+                <div class="form-group">
+                    <label>Data CID</label>
+                    <input type="text" id="grant-cid" placeholder="QmXXX...">
+                    <button class="copy-btn" onclick="copyFromProduce()">📋 Copy from Step 1</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Recipient Address</label>
+                    <select id="recipient-address">
+                        <option value="0x70997970C51812dc3A010C7d01b50e0d17dc79C8">Recipient 1 (0x7099...79C8)</option>
+                        <option value="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC">Recipient 2 (0x3C44...93BC)</option>
+                    </select>
+                </div>
+                
+                <button onclick="grantAccess()">✅ Grant Access</button>
+                
+                <div id="grant-output" class="output" style="display: none;"></div>
+            </div>
+
+            <!-- Step 3: Proxy Re-encryption -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Re-encrypt</div>
+                </div>
+                <p class="step-description">Proxy re-encrypts data for recipient</p>
+                
+                <div class="info-box">
+                    The proxy worker automatically processes unprocessed grants from the blockchain.
+                </div>
+                
+                <button onclick="runProxy()">⚙️ Run Proxy Worker</button>
+                
+                <div id="proxy-output" class="output" style="display: none;"></div>
+            </div>
+
+            <!-- Step 4: Decrypt Data -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Decrypt Data</div>
+                </div>
+                <p class="step-description">Recipient decrypts and views original data</p>
+                
+                <div class="form-group">
+                    <label>Data CID</label>
+                    <input type="text" id="decrypt-cid" placeholder="QmXXX...">
+                    <button class="copy-btn" onclick="copyFromGrant()">📋 Copy from Step 2</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Recipient Address</label>
+                    <select id="decrypt-recipient">
+                        <option value="0x70997970C51812dc3A010C7d01b50e0d17dc79C8">Recipient 1 (0x7099...79C8)</option>
+                        <option value="0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC">Recipient 2 (0x3C44...93BC)</option>
+                    </select>
+                </div>
+                
+                <button onclick="decryptData()">🔓 Decrypt Data</button>
+                
+                <div id="decrypt-output" class="output" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastProducedCID = '';
+        let lastGrantCID = '';
+
+        // Check system status on load
+        window.addEventListener('load', checkSystemStatus);
+
+        async function checkSystemStatus() {
+            // This would call your backend API to check status
+            // For now, we'll simulate it
+            setTimeout(() => {
+                document.getElementById('anvil-status').className = 'status-indicator success';
+                document.getElementById('ipfs-status').className = 'status-indicator success';
+                document.getElementById('contract-status').className = 'status-indicator success';
+            }, 1000);
+        }
+
+        async function produceSensorData() {
+            const sensorData = document.getElementById('sensor-data').value;
+            const sensorId = document.getElementById('sensor-id').value;
+            const output = document.getElementById('produce-output');
+            
+            output.style.display = 'block';
+            output.className = 'output';
+            output.textContent = '⏳ Encrypting and registering data...\n';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/produce', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: sensorData, sensor_id: sensorId })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    lastProducedCID = result.cid;
+                    output.className = 'output success';
+                    output.textContent = `✅ Success!\n\nCID: ${result.cid}\nHash: ${result.data_hash}\nTx: ${result.tx_hash}\nBlock: ${result.block_number}`;
+                } else {
+                    output.className = 'output error';
+                    output.textContent = `❌ Error: ${result.error}`;
+                }
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = `❌ Error: ${error.message}\n\nMake sure the Flask backend is running:\npython app.py`;
+            }
+        }
+
+        async function grantAccess() {
+            const cid = document.getElementById('grant-cid').value;
+            const recipient = document.getElementById('recipient-address').value;
+            const output = document.getElementById('grant-output');
+            
+            if (!cid) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = '❌ Please enter a CID';
+                return;
+            }
+
+            output.style.display = 'block';
+            output.className = 'output';
+            output.textContent = '⏳ Granting access...\n';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/grant-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cid, recipient })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    lastGrantCID = cid;
+                    output.className = 'output success';
+                    output.textContent = `✅ Access Granted!\n\nRecipient: ${recipient}\nKfrag Path: ${result.kfrag_path}\nTx: ${result.tx_hash}\nBlock: ${result.block_number}`;
+                } else {
+                    output.className = 'output error';
+                    output.textContent = `❌ Error: ${result.error}`;
+                }
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = `❌ Error: ${error.message}\n\nMake sure the Flask backend is running:\npython app.py`;
+            }
+        }
+
+        async function runProxy() {
+            const output = document.getElementById('proxy-output');
+            
+            output.style.display = 'block';
+            output.className = 'output';
+            output.textContent = '⏳ Running proxy worker...\n';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/run-proxy', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    output.className = 'output success';
+                    output.textContent = `✅ Proxy Processing Complete!\n\nProcessed: ${result.processed_count} grant(s)\nRe-encrypted CID: ${result.reencrypted_cid || 'N/A'}`;
+                } else {
+                    output.className = 'output error';
+                    output.textContent = `❌ Error: ${result.error}`;
+                }
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = `❌ Error: ${error.message}\n\nMake sure the Flask backend is running:\npython app.py`;
+            }
+        }
+
+        async function decryptData() {
+            const cid = document.getElementById('decrypt-cid').value;
+            const recipient = document.getElementById('decrypt-recipient').value;
+            const output = document.getElementById('decrypt-output');
+            
+            if (!cid) {
+                output.style.display = 'block';
+                output.className = 'output error';
+                output.textContent = '❌ Please enter a CID';
+                return;
+            }
+
+            output.style.display = 'block';
+            output.className = 'output';
+            output.textContent = '⏳ Decrypting data...\n';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/decrypt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cid, recipient_id: recipient })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    output.className = 'output success';
+                    output.textContent = `✅ Decryption Successful!\n\nOriginal Data:\n${JSON.stringify(result.data, null, 2)}`;
+                } else {
+                    output.className = 'output error';
+                    output.textContent = `❌ Error: ${result.error}`;
+                }
+            } catch (error) {
+                output.className = 'output error';
+                output.textContent = `❌ Error: ${error.message}\n\nMake sure the Flask backend is running:\npython app.py`;
+            }
+        }
+
+        function copyFromProduce() {
+            if (lastProducedCID) {
+                document.getElementById('grant-cid').value = lastProducedCID;
+            }
+        }
+
+        function copyFromGrant() {
+            if (lastGrantCID) {
+                document.getElementById('decrypt-cid').value = lastGrantCID;
+            }
+        }
+    </script>
+</body>
+</html>
