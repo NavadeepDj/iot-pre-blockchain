@@ -1,80 +1,101 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
+from datetime import datetime
 from typing import List, Optional
 
+from .blockchain_client import get_data_registry_client, BlockchainUnavailable
 from .models import AccessGrant, DataRecord
 
 
-class LocalRegistry:
+class BlockchainRegistry:
     """
-    Simplified metadata store until the smart contract is ready.
-
-    The registry persists JSON under data/registry.json so that the flow can be
-    demonstrated without spinning up blockchain tooling.
+    Registry implementation that interacts with the smart contract.
     """
 
-    def __init__(self, registry_path: Path):
-        self.registry_path = registry_path
-        if not self.registry_path.exists():
-            self.registry_path.write_text('{"records": [], "grants": []}')
-        else:
-            # Migrate old format (list) to new format (dict)
-            self._migrate_if_needed()
-
-    def _migrate_if_needed(self) -> None:
-        """Migrate old registry format (list) to new format (dict with records/grants)."""
-        try:
-            content = self.registry_path.read_text()
-            data = json.loads(content)
-            # If it's a list, convert to new format
-            if isinstance(data, list):
-                self.registry_path.write_text(
-                    json.dumps({"records": data, "grants": []}, indent=2, default=str)
-                )
-        except (json.JSONDecodeError, KeyError):
-            # If corrupted, reset to empty
-            self.registry_path.write_text('{"records": [], "grants": []}')
+    def __init__(self):
+        self.client = get_data_registry_client()
+        if not self.client:
+            raise BlockchainUnavailable("Blockchain client not available")
 
     def add_record(self, record: DataRecord) -> None:
-        data = self._load()
-        records = [DataRecord(**item) for item in data.get("records", [])]
-        records.append(record)
-        data["records"] = [r.model_dump() for r in records]
-        self._save(data)
+        # This is handled by the client directly usually, but we can wrap it.
+        # However, the CLI calls register_data on the client directly.
+        # We can leave this empty or implement it if we want to unify.
+        # For now, let's assume the CLI handles the transaction.
+        pass
 
     def list_records(self) -> List[DataRecord]:
-        data = self._load()
-        return [DataRecord(**item) for item in data.get("records", [])]
+        # Fetch DataRegistered events
+        events = self.client.contract.events.DataRegistered().get_logs(from_block=0)
+        records = []
+        for event in events:
+            args = event["args"]
+            # We need to fetch full details or just use event data
+            # Event has: recordId, cid, owner
+            # We need data_hash, sensor_id, created_at
+            # We can fetch individual records
+            try:
+                r = self.client.get_record(args["cid"])
+                records.append(DataRecord(
+                    cid=r["cid"],
+                    data_hash=r["dataHash"].hex(),
+                    owner_address=r["owner"],
+                    sensor_id=r["sensorId"],
+                    created_at=datetime.fromtimestamp(r["createdAt"])
+                ))
+            except Exception:
+                continue
+        return records
 
     def add_grant(self, grant: AccessGrant) -> None:
-        """Add an access grant (permission for recipient to access a CID)."""
-        data = self._load()
-        grants = [AccessGrant(**item) for item in data.get("grants", [])]
-        grants.append(grant)
-        data["grants"] = [g.model_dump() for g in grants]
-        self._save(data)
+        # Handled by client transaction
+        pass
 
     def list_grants(self, cid: Optional[str] = None) -> List[AccessGrant]:
-        """List all grants, optionally filtered by CID."""
-        data = self._load()
-        grants = [AccessGrant(**item) for item in data.get("grants", [])]
-        if cid:
-            grants = [g for g in grants if g.cid == cid]
+        events = self.client.fetch_access_granted_events(from_block=0)
+        grants = []
+        for event in events:
+            args = event["args"]
+            event_cid = args["cid"]
+            recipient = args["recipient"]
+            
+            if cid and event_cid != cid:
+                continue
+                
+            try:
+                g = self.client.get_grant(event_cid, recipient)
+                # g has: cid, recipient, recipientPublicKey, kfragUri, reencryptedCid, processed, createdAt
+                grants.append(AccessGrant(
+                    cid=g["cid"],
+                    owner_address=self.client.get_record(g["cid"])["owner"], # Need owner
+                    recipient_address=g["recipient"],
+                    recipient_public_key=g["recipientPublicKey"],
+                    reencryption_key_path=g["kfragUri"],
+                    reencrypted_cid=g["reencryptedCid"] if g["reencryptedCid"] else None,
+                    processed=g["processed"],
+                    created_at=datetime.fromtimestamp(g["createdAt"])
+                ))
+            except Exception:
+                continue
         return grants
 
     def get_grant(self, cid: str, recipient_address: str) -> Optional[AccessGrant]:
-        """Get a specific grant for a CID and recipient."""
-        grants = self.list_grants(cid)
-        for grant in grants:
-            if grant.recipient_address == recipient_address:
-                return grant
-        return None
+        try:
+            g = self.client.get_grant(cid, recipient_address)
+            if not g["cid"]: # Empty struct
+                return None
+            
+            return AccessGrant(
+                cid=g["cid"],
+                owner_address=self.client.get_record(g["cid"])["owner"],
+                recipient_address=g["recipient"],
+                recipient_public_key=g["recipientPublicKey"],
+                reencryption_key_path=g["kfragUri"],
+                reencrypted_cid=g["reencryptedCid"] if g["reencryptedCid"] else None,
+                processed=g["processed"],
+                created_at=datetime.fromtimestamp(g["createdAt"])
+            )
+        except Exception:
+            return None
 
-    def _load(self) -> dict:
-        return json.loads(self.registry_path.read_text())
-
-    def _save(self, data: dict) -> None:
-        self.registry_path.write_text(json.dumps(data, indent=2, default=str))
 

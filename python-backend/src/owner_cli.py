@@ -2,24 +2,68 @@ from __future__ import annotations
 
 import hashlib
 from base64 import b64encode
+from pathlib import Path
 
 import typer
 from rich.console import Console
 
+from web3 import Web3
+from web3.exceptions import ContractLogicError
+
 from .config import settings
 from .models import AccessGrant
-from .registry import LocalRegistry
+from .registry import BlockchainRegistry
 from .utils.crypto_utils import (
     generate_reencryption_keys,
     load_or_create_owner_keys,
     load_or_create_recipient_keys,
     save_kfrags,
 )
+from .blockchain_client import (
+    BlockchainUnavailable,
+    MissingPrivateKey,
+)
 
 app = typer.Typer(help="Owner utilities for managing data + re-encryption keys.")
 console = Console()
 
-REGISTRY = LocalRegistry(settings.data_dir / "registry.json")
+try:
+    REGISTRY = BlockchainRegistry()
+except BlockchainUnavailable:
+    console.print("[yellow]Blockchain client unavailable. Ensure Anvil is running.[/]")
+    REGISTRY = None
+
+
+
+@app.command("register-data")
+def register_data_command(
+    cid: str = typer.Argument(..., help="IPFS CID of the encrypted blob"),
+    data_hash: str = typer.Argument(..., help="SHA-256 hash (hex) of the ciphertext"),
+    sensor_id: str = typer.Argument(..., help="Sensor identifier"),
+):
+    """
+    Manually register a data record on-chain.
+    Useful if the automatic registration failed or for backfilling.
+    """
+    if not REGISTRY:
+        console.print("[yellow]Blockchain client unavailable; cannot register on-chain.[/]")
+        raise typer.Exit(code=1)
+
+    try:
+        receipt = REGISTRY.client.register_data(cid, data_hash, sensor_id)
+    except MissingPrivateKey:
+        console.print("[red]OWNER_PRIVATE_KEY missing; cannot send transaction.[/]")
+        raise typer.Exit(code=1)
+    except BlockchainUnavailable as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(code=1)
+    except ContractLogicError as exc:
+        console.print(f"[yellow]On-chain call reverted: {exc}[/]")
+        raise typer.Exit(code=1)
+
+    console.print(
+        f"[bold green]Registered![/] tx={receipt.tx_hash} block={receipt.block_number}"
+    )
 
 
 @app.command("grant-access")
@@ -77,20 +121,30 @@ def grant_access(
 
     kfrag_path = save_kfrags(kfrags, grant_id)
     console.print(f"[green]Saved kfrags to {kfrag_path}[/]")
+    kfrag_uri = Path(kfrag_path).as_uri()
 
-    # Create and save the grant
-    grant = AccessGrant(
-        cid=cid,
-        owner_address=settings.owner_address,
-        recipient_address=recipient_address,
-        recipient_public_key=b64encode(bytes(recipient_keys.public_key)).decode("ascii"),
-        reencryption_key_path=str(kfrag_path),
-    )
-    REGISTRY.add_grant(grant)
+    # Create and save the grant on-chain
+    try:
+        receipt = REGISTRY.client.grant_access(
+            cid, 
+            recipient_address, 
+            b64encode(bytes(recipient_keys.public_key)).decode("ascii"),
+            kfrag_uri
+        )
+        console.print(
+            f"[bold green]Success![/] Access granted to {recipient_address} for CID {cid}"
+        )
+        console.print(
+            f"[cyan]On-chain AccessGranted tx:[/] {receipt.tx_hash} "
+            f"(block {receipt.block_number})"
+        )
+    except MissingPrivateKey:
+        console.print("[red]OWNER_PRIVATE_KEY missing; cannot send transaction.[/]")
+        raise typer.Exit(code=1)
+    except Exception as exc:
+        console.print(f"[red]Failed to grant access on-chain: {exc}[/]")
+        raise typer.Exit(code=1)
 
-    console.print(
-        f"[bold green]Success![/] Access granted to {recipient_address} for CID {cid}"
-    )
     console.print(f"Recipient can now use the proxy to decrypt this data.")
 
 
@@ -107,6 +161,9 @@ def list_grants(cid: str = typer.Option(None, help="Filter by CID")):
             f"- CID: {grant.cid} | Recipient: {grant.recipient_address} | "
             f"Created: {grant.created_at}"
         )
+
+
+
 
 
 if __name__ == "__main__":

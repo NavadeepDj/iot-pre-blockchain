@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 from base64 import b64decode
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich.console import Console
 
 from .config import settings
-from .registry import LocalRegistry
+from .registry import BlockchainRegistry
+from .blockchain_client import BlockchainUnavailable
 from .utils.crypto_utils import (
     decrypt_reencrypted,
     load_or_create_owner_keys,
@@ -21,16 +23,23 @@ from umbral.capsule_frag import CapsuleFrag, VerifiedCapsuleFrag
 app = typer.Typer(help="Recipient workflow for fetching + decrypting data.")
 console = Console()
 
-REGISTRY = LocalRegistry(settings.data_dir / "registry.json")
+try:
+    REGISTRY = BlockchainRegistry()
+except BlockchainUnavailable:
+    console.print("[yellow]Blockchain client unavailable. Ensure Anvil is running.[/]")
+    REGISTRY = None
 
 
 @app.command("decrypt")
 def decrypt(
-    cid: str = typer.Argument(..., help="Original CID of the encrypted data"),
-    recipient_id: str = typer.Option(
-        default="recipient-1",
-        help="Your recipient identifier/address",
-    ),
+    cid: Annotated[str, typer.Argument(help="Original CID of the encrypted data")],
+    recipient_id: Annotated[
+        str,
+        typer.Option(
+            help="Your recipient identifier/address",
+            show_default=True,
+        ),
+    ] = "recipient-1",
 ):
     """
     Fetch and decrypt re-encrypted data that was granted to you.
@@ -45,6 +54,10 @@ def decrypt(
         python -m src.recipient_cli decrypt QmXXX...
     """
     # Check if grant exists
+    if not REGISTRY:
+        console.print("[yellow]Blockchain client unavailable.[/]")
+        raise typer.Exit(code=1)
+
     grant = REGISTRY.get_grant(cid, recipient_id)
     if not grant:
         console.print(
@@ -129,12 +142,19 @@ def decrypt(
 
 @app.command("list-access")
 def list_access(
-    recipient_id: str = typer.Option(
-        default="recipient-1",
-        help="Your recipient ID",
-    ),
+    recipient_id: Annotated[
+        str,
+        typer.Option(
+            help="Your recipient ID",
+            show_default=True,
+        ),
+    ] = "recipient-1",
 ):
     """List all CIDs you have access to."""
+    if not REGISTRY:
+        console.print("[yellow]Blockchain client unavailable.[/]")
+        return
+
     all_grants = REGISTRY.list_grants()
     my_grants = [g for g in all_grants if g.recipient_address == recipient_id]
 
@@ -153,4 +173,3 @@ def list_access(
 
 if __name__ == "__main__":
     app()
-

@@ -13,6 +13,27 @@
       "owner_address": "0xNk",
       "sensor_id": "sensor-1",
       "created_at": "2025-11-19 05:56:52.883581"
+    },
+    {
+      "cid": "QmZvAcJqLPVB4XzdS6bwr6EqFHWAutEsG1t3UVLEL1t5R7",
+      "data_hash": "830e8db1519dd05dae8da0d3a91778c7679b1bd22582924d22eb6dd428457050",
+      "owner_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "sensor_id": "sensor-1",
+      "created_at": "2025-11-19 14:21:50.339951"
+    },
+    {
+      "cid": "QmcQ7mvaHpuhmnapSSNqkYCamt7i56EsmCSghjSaUrjgQr",
+      "data_hash": "ff8f4ea57fa5b5e2d0f21a6c952cd401f052e1d7967600fe7aa34a59a8f710b5",
+      "owner_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "sensor_id": "sensor-1",
+      "created_at": "2025-11-19 14:23:19.942493"
+    },
+    {
+      "cid": "QmbqGd1YZBrGoRBkU3RjvcTtJKTXjZF4mTgdZeypztJco1",
+      "data_hash": "78908d17a80501ac73713632caebf76421ccf5cffe1fae3f7dc7987da89faa53",
+      "owner_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "sensor_id": "sensor-1",
+      "created_at": "2025-11-19 14:24:47.973581"
     }
   ],
   "grants": [
@@ -25,6 +46,17 @@
       "reencrypted_cid": "QmRFp1HMoG9iDa7vQgp5Cm25eXw9Vx1AHd6W7tXVSXzmCE",
       "processed": true,
       "created_at": "2025-11-19 06:02:00.176994",
+      "expires_at": null
+    },
+    {
+      "cid": "QmbqGd1YZBrGoRBkU3RjvcTtJKTXjZF4mTgdZeypztJco1",
+      "owner_address": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "recipient_address": "0xRecipient",
+      "recipient_public_key": "A6P3CZmu6AhzAndfjVSZducqVoTx4D/kHxZK27Rdmrld",
+      "reencryption_key_path": "C:\\Users\\navad\\iot-pre-blockchain\\python-backend\\data\\kfrags\\8f64fbc2e44c6d3d.json",
+      "reencrypted_cid": "QmUrQjc1ayrgkw9gddUphofMitdbtsbjUSVACmZ9N5tzLu",
+      "processed": true,
+      "created_at": "2025-11-19 14:29:55.150312",
       "expires_at": null
     }
   ]

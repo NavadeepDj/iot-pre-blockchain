@@ -5,7 +5,8 @@ This guide walks you through the complete PRE workflow: **Owner → Proxy → Re
 ## Prerequisites
 
 1. IPFS daemon running: `ipfs daemon`
-2. Python venv activated: `.\venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Linux/Mac)
+2. Local blockchain (e.g., `anvil`) running and `DataRegistry` deployed. Export the contract address to `.env` (`CONTRACT_ADDRESS=`) and set `OWNER_PRIVATE_KEY` to the signer that deployed it.
+3. Python venv activated: `.\venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Linux/Mac)
 
 ## Step-by-Step Workflow
 
@@ -21,7 +22,7 @@ python -m src.sensor_service produce sample_payload.json
 **What happens:**
 - Sensor data is encrypted using owner's public key
 - Encrypted blob (ciphertext + capsule) is uploaded to IPFS
-- Metadata is stored in local registry
+- Metadata is stored in the local registry *and* registered on the `DataRegistry` smart contract (if `CONTRACT_ADDRESS` is configured)
 
 ### Step 2: Owner Grants Access to Recipient
 
@@ -33,7 +34,7 @@ python -m src.owner_cli grant-access Qmbc8riFXNuhZPMBf9x9mJidPX68y4UvqAMsYijfWif
 **What happens:**
 - Owner generates re-encryption keys (kfrags) for the recipient
 - Kfrags are saved to disk
-- Access grant is recorded in the registry
+- Access grant is recorded in the registry **and** emitted on-chain via `grantAccess(recordId, recipient, kfragURI)`
 
 ### Step 3: Proxy Re-encrypts the Data
 
@@ -54,6 +55,7 @@ python -m src.proxy_worker
 - Uses kfrags to re-encrypt the capsule (without seeing the plaintext!)
 - Uploads re-encrypted blob to IPFS
 - Updates grant with new CID
+- If the blockchain is enabled, the worker pulls events directly from the `AccessGranted` log (so it works even without a local registry copy)
 
 ### Step 4: Recipient Decrypts the Data
 
@@ -107,8 +109,9 @@ python -m src.recipient_cli decrypt <CID> --recipient-id recipient-1
 
 ## Next Steps
 
-Once you understand this flow, we can add the blockchain layer to:
-- Store metadata on-chain (instead of local registry)
-- Emit access grant events that the proxy listens to
-- Provide tamper-proof audit logs
+You now have the blockchain-integrated flow. From here you can:
+
+- Use the Foundry tests to extend the contract (`blockchain/test/Counter.t.sol`)
+- Build a small UI to visualize records and grants
+- Harden the kfrag distribution (e.g., push to IPFS/S3 rather than file URIs)
 

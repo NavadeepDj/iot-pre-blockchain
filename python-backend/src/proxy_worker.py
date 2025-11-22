@@ -4,12 +4,15 @@ import json
 import time
 from base64 import b64decode, b64encode
 from pathlib import Path
+from typing import Optional
+from urllib.parse import urlparse, unquote
 
 from rich.console import Console
 
 from .config import settings
 from .models import AccessGrant
-from .registry import LocalRegistry
+from .registry import BlockchainRegistry
+from .blockchain_client import BlockchainUnavailable
 from .utils.crypto_utils import (
     load_kfrags,
     reencrypt_capsule,
@@ -19,12 +22,17 @@ from umbral.capsule import Capsule
 
 console = Console()
 
-REGISTRY = LocalRegistry(settings.data_dir / "registry.json")
+try:
+    REGISTRY = BlockchainRegistry()
+except BlockchainUnavailable:
+    console.print("[yellow]Blockchain client unavailable. Ensure Anvil is running.[/]")
+    REGISTRY = None
+
 REENCIPHERED_DIR = settings.data_dir / "reenciphered"
 REENCIPHERED_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def process_grant(grant):
+def process_grant(grant: AccessGrant) -> bool:
     """
     Process a single access grant: fetch original data, re-encrypt, upload to IPFS.
     """
@@ -37,9 +45,15 @@ def process_grant(grant):
         console.print(f"[red]No kfrag path found for grant[/]")
         return False
 
-    kfrags = load_kfrags(Path(grant.reencryption_key_path))
+    # Resolve kfrag path (it might be a URI)
+    kfrag_path = _resolve_kfrag_uri(grant.reencryption_key_path)
+    if not kfrag_path or not kfrag_path.exists():
+         console.print(f"[red]Kfrag file not found at {grant.reencryption_key_path}[/]")
+         return False
+
+    kfrags = load_kfrags(kfrag_path)
     if not kfrags:
-        console.print(f"[red]Failed to load kfrags from {grant.reencryption_key_path}[/]")
+        console.print(f"[red]Failed to load kfrags from {kfrag_path}[/]")
         return False
 
     # Fetch original encrypted blob from IPFS
@@ -88,19 +102,13 @@ def process_grant(grant):
         console.print(f"[red]Failed to upload to IPFS: {exc}[/]")
         return False
 
-    # Update grant with re-encrypted CID
-    grant.reencrypted_cid = reencrypted_cid
-    grant.processed = True
-
-    # Save updated grant back to registry
-    data = REGISTRY._load()
-    grants = [AccessGrant(**item) for item in data.get("grants", [])]
-    for i, g in enumerate(grants):
-        if g.cid == grant.cid and g.recipient_address == grant.recipient_address:
-            grants[i] = grant
-            break
-    data["grants"] = [g.model_dump() for g in grants]
-    REGISTRY._save(data)
+    # Update grant on chain
+    try:
+        receipt = REGISTRY.client.complete_access(grant.cid, grant.recipient_address, reencrypted_cid)
+        console.print(f"[green]Updated grant on chain: {receipt.tx_hash}[/]")
+    except Exception as exc:
+        console.print(f"[red]Failed to update grant on chain: {exc}[/]")
+        return False
 
     # Also save locally for easy access
     local_path = REENCIPHERED_DIR / f"{grant.recipient_address}_{grant.cid[:16]}.json"
@@ -110,18 +118,20 @@ def process_grant(grant):
     return True
 
 
-def main(poll_interval: float = 2.0):
+def main(poll_interval: float = 5.0):
     """
     Proxy worker that polls for new access grants and re-encrypts data.
-
-    In a real system, this would listen to blockchain events. For now,
-    it polls the local registry for unprocessed grants.
     """
     console.print("[cyan]Proxy worker starting. Polling for access grants...[/]")
 
+    if not REGISTRY:
+        console.print("[red]Registry not available. Exiting.[/]")
+        return
+
     try:
         while True:
-            # Get all unprocessed grants
+            # Get all grants and filter for unprocessed ones
+            # Note: list_grants fetches all events, which is inefficient but simple
             all_grants = REGISTRY.list_grants()
             unprocessed = [g for g in all_grants if not g.processed]
 
@@ -145,6 +155,27 @@ def main(poll_interval: float = 2.0):
         console.print("\n[green]Proxy worker stopped.[/]")
 
 
+def _resolve_kfrag_uri(uri: str) -> Optional[Path]:
+    if not uri:
+        return None
+    parsed = urlparse(uri)
+    if parsed.scheme in ("", "file"):
+        if parsed.scheme == "file":
+            local_path = unquote(parsed.path)
+            # On Windows, remove leading slash if path contains drive letter
+            if local_path.startswith("/") and len(local_path) > 2 and local_path[2] == ":":
+                local_path = local_path[1:]
+            path = Path(local_path)
+        else:
+            path = Path(uri)
+        return path
+    # If it's http/https, we might need to download it, but for now we assume local file access for kfrags
+    # In a real PRE system, the kfrag might be encrypted and stored on IPFS too.
+    console.print(f"[yellow]Unsupported kfrag URI scheme '{parsed.scheme}'.[/]")
+    return None
+
+
 if __name__ == "__main__":
     main()
+
 

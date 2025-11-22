@@ -26,11 +26,11 @@ class AccessGrant(BaseModel):
     cid: str
     owner_address: str
     recipient_address: str
-    recipient_public_key: str = Field(
-        ..., description="Base64-encoded recipient's Umbral public key"
+    recipient_public_key: Optional[str] = Field(
+        default=None, description="Base64-encoded recipient's Umbral public key"
     )
     reencryption_key_path: Optional[str] = Field(
-        default=None, description="Path to stored re-encryption key material (kfrags)"
+        default=None, description="Path/URI to stored re-encryption key material (kfrags)"
     )
     reencrypted_cid: Optional[str] = Field(
         default=None, description="IPFS CID of the re-encrypted blob (set by proxy)"

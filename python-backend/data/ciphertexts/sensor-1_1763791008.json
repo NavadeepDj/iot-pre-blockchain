@@ -1,0 +1,7 @@
+{
+  "sensor_id": "sensor-1",
+  "original_filename": "sample_payload.json",
+  "ciphertext": "fAvPAV7eDLVQYq4mdr9fw7V95QOFbuvfwuDhkYfaCb9uvt7L7lQkz/LJk578GXCxYuq2OPR7U6AZPlZhcHdZpre9ey1pwbEZo3GPbghFGMWmDz4k2DZ+SdvtGQ6zwED0EzTtBdHaORTQM97s4wR16rK+1fo6tL7KJQ0lqRqD5CSnscFN8ctuoj6H5/QlNrNK6BcU/0J04xQWQ7dt6pDTOKFcuMzPnQ==",
+  "capsule": "AvgxnCAwh5gOwW3KPOGR/4zQkGeXXHpPikYRS4DvZWDtAkURL7+L6IGsREHO0LLtqXKEmzcjirndWQrgTxKFjyTLTYOP1YUsrYDDySBmxXOMfu603JB0tI/JQUlVH24YNuA=",
+  "note": "ciphertext + capsule are all we need for future re-encryption"
+}

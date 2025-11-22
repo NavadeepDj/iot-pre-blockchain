@@ -12,7 +12,7 @@ from rich.console import Console
 from .config import settings
 
 from .models import DataRecord
-from .registry import LocalRegistry
+from .registry import BlockchainRegistry
 from .utils.crypto_utils import (
     encrypt_payload,
     load_or_create_owner_keys,
@@ -23,7 +23,12 @@ from .utils.ipfs_client import get_ipfs_client
 app = typer.Typer(help="Mock IoT sensor that produces encrypted payloads.")
 console = Console()
 
-REGISTRY = LocalRegistry(settings.data_dir / "registry.json")
+try:
+    REGISTRY = BlockchainRegistry()
+except BlockchainUnavailable:
+    console.print("[yellow]Blockchain client unavailable. Ensure Anvil is running.[/]")
+    REGISTRY = None
+
 CIPHERS_DIR = settings.data_dir / "ciphertexts"
 CIPHERS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -92,7 +97,19 @@ def produce(
         owner_address=settings.owner_address,
         sensor_id=sensor_id,
     )
-    REGISTRY.add_record(record)
+
+    
+    if REGISTRY:
+        try:
+            receipt = REGISTRY.client.register_data(record.cid, record.data_hash, record.sensor_id)
+            console.print(
+                f"[cyan]On-chain registration tx:[/] {receipt.tx_hash} "
+                f"(block {receipt.block_number})"
+            )
+        except Exception as exc:
+            console.print(f"[yellow]On-chain registration failed: {exc}[/]")
+    else:
+        console.print("[yellow]Registry unavailable, skipping on-chain registration.[/]")
 
     console.print(
         "[bold green]Success![/] "
@@ -116,6 +133,9 @@ def list_records():
         console.print(
             f"- Sensor: {record.sensor_id} | CID: {record.cid} | Hash: {record.data_hash}"
         )
+
+
+
 
 
 if __name__ == "__main__":
