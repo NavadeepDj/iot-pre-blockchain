@@ -84,12 +84,14 @@ def grant_access(
         python -m src.owner_cli grant-access QmXXX... 0xRecipient
     """
     # Check if data record exists
+# Try to find the record locally; if not found, just warn.
     records = REGISTRY.list_records()
     record = next((r for r in records if r.cid == cid), None)
     if not record:
-        console.print(f"[red]Error: No data record found for CID {cid}[/]")
-        console.print("[yellow]Make sure you've run 'sensor_service produce' first.[/]")
-        raise typer.Exit(code=1)
+        console.print(
+            f"[yellow]Warning: No local record found for CID {cid}. "
+            "Assuming it exists on-chain and continuing.[/]"
+        )
 
     # Check if grant already exists
     existing_grant = REGISTRY.get_grant(cid, recipient_address)

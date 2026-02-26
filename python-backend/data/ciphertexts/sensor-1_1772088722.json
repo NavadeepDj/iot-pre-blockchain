@@ -1,0 +1,6 @@
+{
+  "sensor_id": "sensor-1",
+  "ciphertext": "WX5CbeJzpE5qqLja7d4b7289Bq6YjAtLKwOupt4cV7289mGBBL4CfV1W0SQpZeRu9iRqnfIwdqqovm/d6XCxMi1aGv8o+u3SI+ZjxJAbP2a8x4NQn77JqU861sFvnON5L3G59SqhZVKAJa+Jgq4ZvzELmTxC",
+  "capsule": "AySZ5OlXnu/5/EEaF2OraXUl/qKbMCe1rUkHsgBSH3X5A8dzRi2pm0bg6TLzRU2QzMMNSyUyzdqMJSyQlOspq5daupsOXq3PdXgQbS8LrohJUr9R8QbXrosAXdh5UyWkrb0=",
+  "note": "ciphertext + capsule for re-encryption"
+}
