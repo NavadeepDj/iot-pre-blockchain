@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --primary: 250 80% 65%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 250 80% 65%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsla(var(--primary), 0.4); }
+  50% { box-shadow: 0 0 12px 4px hsla(var(--primary), 0.2); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Markdown content styles */
+.prose-docs {
+  @apply text-foreground/90 leading-relaxed;
+}
+.prose-docs h1 { @apply text-3xl font-bold mt-8 mb-4 text-foreground; }
+.prose-docs h2 { @apply text-2xl font-semibold mt-6 mb-3 text-foreground; }
+.prose-docs h3 { @apply text-xl font-semibold mt-4 mb-2 text-foreground; }
+.prose-docs p { @apply mb-4; }
+.prose-docs ul { @apply list-disc pl-6 mb-4 space-y-1; }
+.prose-docs ol { @apply list-decimal pl-6 mb-4 space-y-1; }
+.prose-docs li { @apply text-foreground/80; }
+.prose-docs code {
+  @apply bg-secondary/80 text-primary px-1.5 py-0.5 rounded text-sm font-mono;
+}
+.prose-docs pre {
+  @apply bg-secondary/80 rounded-lg p-4 overflow-x-auto mb-4;
+}
+.prose-docs pre code {
+  @apply bg-transparent p-0;
+}
+.prose-docs blockquote {
+  @apply border-l-4 border-primary/50 pl-4 py-1 my-4 text-muted-foreground italic;
+}
+.prose-docs table {
+  @apply w-full border-collapse mb-4;
+}
+.prose-docs th {
+  @apply bg-secondary/80 text-left p-2 border border-border font-semibold;
+}
+.prose-docs td {
+  @apply p-2 border border-border;
+}
+.prose-docs hr {
+  @apply border-border my-6;
+}
+.prose-docs a {
+  @apply text-primary underline hover:text-primary/80;
+}
+.prose-docs strong {
+  @apply text-foreground font-semibold;
+}

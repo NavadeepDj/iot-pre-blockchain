@@ -161,25 +161,34 @@ python app.py
 
 Keep this running. Wait for `Running on http://127.0.0.1:5000/`.
 
-### Step 5 — Open the Web UI
+### Terminal 4 -- Use simple htmlfile if needed
+Open index.html in web-ui if needed and get it done..
+If you want good dashboard and all, go for the web dashboard..
+### Terminal 5 — Start the Web Dashboard
 
-Open the following file in your browser:
+```bash
+cd web-dashboard
+npm run dev
+```
+
+Keep this running. Wait for `Local: http://localhost:3000/`.
+
+### Step 6 — Open the Dashboard
+
+Open your browser and go to:
 
 ```
-web-ui/index.html
+http://localhost:3000
 ```
 
-Or, right-click and choose "Open with" → your browser.
+### Step 7 — Use the Dashboard
 
-### Step 6 — Use the Web UI
+- **Dashboard** — See system status, stats, and the PRE data flow diagram
+- **Workflow** — Run the full 4-step process (Produce → Grant → Proxy → Decrypt)
+- **Records & Grants** — Browse all registered data and access grants
+- **Documentation** — Read project docs and troubleshooting guides
 
-- Use the browser interface to:
-  1. Produce (encrypt & register) sensor data
-  2. Grant access to a recipient
-  3. Run the proxy worker
-  4. Decrypt data as a recipient
-
-All actions are performed via the Web UI buttons and forms.
+All actions are performed via the dashboard forms and buttons.
 
 > **Tip:** Make sure all backend services (Anvil, IPFS, Flask API) are running before using the Web UI.
 
@@ -192,6 +201,8 @@ All actions are performed via the Web UI buttons and forms.
 | 1 | `anvil` | Yes |
 | 2 | `ipfs daemon` | Yes |
 | 3 | `forge script ...` (deploy) | No (one-time) |
+| 4 | `python app.py` (Flask API) | Yes |
+| 5 | `npm run dev` (Dashboard) | Yes |
 | 3 | `python -m src.sensor_service produce ...` | No |
 | 3 | `python -m src.owner_cli grant-access ...` | No |
 | 3 | `python -m src.proxy_worker` | Stop after processing |
