@@ -1,0 +1,8 @@
+{
+  "original_cid": "QmcgHjN3u2QXTvFJX7fjJ6DHdqPqPhHE7zJkPyfk7iJf4z",
+  "recipient": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "ciphertext": "g5gEHWA4XQy6vBX8F1R3pPoppDguyxtrGxqdYqBuHCjn+WIiYffAaUZXLGVg3F9a182ByShv/7nBAcyYRYGpyOhKPKHZ+8qOGCOlUARJwX86v+81sLWsob4/l5uEZ1JxMExSb9t74CBkKduWrdGDZJe8qP5u",
+  "original_capsule": "A95suvmcYiqoiHORWf8MKxUpLiQP/5Yb0C+2n04lVfA3AnwadJ59bR2H0wIMmMzHxDFAWtA7CtjQMb6Gw63/2/Ara4VPh+dgCuoae4aNQcd4cK8lN+3z4NTzgbsZAs9sV+Y=",
+  "cfrag": "A0GcrxVt3iVnXytD7zVatIIykhoHPdQmHI2sDBCbIVhGAwRVsDlesFNix+kjz/biEgr+OGxgm1rUbqNaY2rwj7V8Lj4yA2EWcxlTajcGdMT6mzmsaP7uwXvpd2yBrZTpoesC/ltfUGLEkT+HdVfAnQerGBR8Yt0tIATkJGzlCJ3QRWQDZuBbGwEXzc8XDdnCe0aQLR70YR5cnVFl1R8CzWc4t7sCTzj/IdnPW00XV4S6OGoaJe1F5yijZyg+2mkxfrVv2cQDPeqgB9j70j/8kEqUdR0zyEg5v/ZR8QM5TG4lVYr8XAgDGyi25FQ/MA/Rt5wjeul7c/g3Y+ZFgBYH+u3ATgwZe+q9PS2gC37AMApV+u2U/nKaEfPKvjkWS3JxubktyqGMFY1h242cbC4R68hJjt7/Gul6K8tcQ//AMt+5BsDZq1zJQ72dIgx857NAPSI3+537xIZwlk8eDGBgT/31aeuzNqk=",
+  "note": "This blob contains the re-encrypted capsule fragment (cfrag) that the recipient needs to decrypt"
+}
